@@ -22,6 +22,7 @@ export default function App() {
   const [Psbt, setPsbt] = useState("");
   const [psbtList, setPsbtList] = useState([]);
   const [psbtListInput, setPsbtListInput] = useState("");
+  const [combineAddress, setCombineAddress] = useState("");
   const [amount, setAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -165,6 +166,7 @@ export default function App() {
 
       const result = await provider.request("signPsbt", {
         psbt: base.toHex(),
+        address: combineAddress,
         broadcast: true,
         network: "testnet",
       });
@@ -173,7 +175,7 @@ export default function App() {
     } catch (e) {
       setError(e.message || `${e}`);
     }
-  }, [provider, getProvider, psbtListInput]);
+  }, [provider, getProvider, psbtListInput, combineAddress]);
 
   const onChangeAddressRecipient = useCallback((event) => {
     setRecipient(event.target.value);
@@ -189,6 +191,10 @@ export default function App() {
 
   const onChangePsbtList = useCallback((event) => {
     setPsbtListInput(event.target.value);
+  }, []);
+
+  const onChangeCombineAddress = useCallback((event) => {
+    setCombineAddress(event.target.value);
   }, []);
 
   const onChangeAmount = useCallback((event) => {
@@ -252,6 +258,12 @@ export default function App() {
       </div>
       <div className="row">
         <h2>Combine PSBTs</h2>
+
+        <input
+          placeholder="Address"
+          value={combineAddress}
+          onChange={onChangeCombineAddress}
+        />
 
         <textarea
           placeholder="PSBT list"
