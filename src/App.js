@@ -24,6 +24,7 @@ export default function App() {
   const [psbtListInput, setPsbtListInput] = useState("");
   const [amount, setAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [signAddress, setSignAddress] = useState("");
 
   const getProvider = useCallback(() => {
     if (window.SubWalletBitcoin) {
@@ -167,13 +168,15 @@ export default function App() {
         psbt: base.toHex(),
         broadcast: true,
         network: "testnet",
+        address: signAddress,
+        signAtIndex: [],
       });
 
       setResultHash(result.txid || txHex);
     } catch (e) {
       setError(e.message || `${e}`);
     }
-  }, [provider, getProvider, psbtListInput]);
+  }, [provider, getProvider, psbtListInput, signAddress]);
 
   const onChangeAddressRecipient = useCallback((event) => {
     setRecipient(event.target.value);
@@ -189,6 +192,10 @@ export default function App() {
 
   const onChangePsbtList = useCallback((event) => {
     setPsbtListInput(event.target.value);
+  }, []);
+
+  const onChangeSignAddress = useCallback((event) => {
+    setSignAddress(event.target.value);
   }, []);
 
   const onChangeAmount = useCallback((event) => {
@@ -252,6 +259,12 @@ export default function App() {
       </div>
       <div className="row">
         <h2>Combine PSBTs</h2>
+
+        <input
+          placeholder="Address"
+          value={signAddress}
+          onChange={onChangeSignAddress}
+        />
 
         <textarea
           placeholder="PSBT list"
