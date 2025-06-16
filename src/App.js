@@ -20,6 +20,8 @@ export default function App() {
   const [recipient, setRecipient] = useState("");
   const [sender, setSender] = useState("");
   const [Psbt, setPsbt] = useState("");
+  const [psbtList, setPsbtList] = useState([]);
+  const [psbtListInput, setPsbtListInput] = useState("");
   const [amount, setAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -127,6 +129,52 @@ export default function App() {
     }
   }, [provider, getProvider, Psbt]);
 
+  const combinePsbt = useCallback(async () => {
+    try {
+      if (!provider) {
+        getProvider();
+        return;
+      }
+
+      let list;
+      try {
+        list = JSON.parse(psbtListInput);
+        if (!Array.isArray(list)) {
+          list = [psbtListInput];
+        }
+      } catch (e) {
+        list = psbtListInput
+          .split(/\n|,/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      setPsbtList(list);
+      if (list.length === 0) {
+        throw new Error("No PSBTs provided");
+      }
+
+      let base = Psbt.fromHex(list[0]);
+      for (let i = 1; i < list.length; i++) {
+        const next = Psbt.fromHex(list[i]);
+        base = base.combine(next);
+      }
+
+      base.finalizeAllInputs();
+      const txHex = base.extractTransaction().toHex();
+
+      const result = await provider.request("signPsbt", {
+        psbt: base.toHex(),
+        broadcast: true,
+        network: "testnet",
+      });
+
+      setResultHash(result.txid || txHex);
+    } catch (e) {
+      setError(e.message || `${e}`);
+    }
+  }, [provider, getProvider, psbtListInput]);
+
   const onChangeAddressRecipient = useCallback((event) => {
     setRecipient(event.target.value);
   }, []);
@@ -137,6 +185,10 @@ export default function App() {
 
   const onChangePsbtValue = useCallback((event) => {
     setPsbt(event.target.value);
+  }, []);
+
+  const onChangePsbtList = useCallback((event) => {
+    setPsbtListInput(event.target.value);
   }, []);
 
   const onChangeAmount = useCallback((event) => {
@@ -197,6 +249,16 @@ export default function App() {
           onChange={onChangePsbtValue}
         />
         <button onClick={signPsbt}>Send</button>
+      </div>
+      <div className="row">
+        <h2>Combine PSBTs</h2>
+
+        <textarea
+          placeholder="PSBT list"
+          value={psbtListInput}
+          onChange={onChangePsbtList}
+        />
+        <button onClick={combinePsbt}>Combine</button>
       </div>
       <div className="row">
         <h2>Result</h2>
