@@ -164,19 +164,19 @@ export default function App() {
       base.finalizeAllInputs();
       const txHex = base.extractTransaction().toHex();
 
-      const result = await provider.request("signPsbt", {
-        psbt: base.toHex(),
-        broadcast: true,
-        network: "testnet",
-        address: signAddress,
-        signAtIndex: [],
+      const resp = await fetch("https://blockstream.info/testnet/api/tx", {
+        method: "POST",
+        body: txHex,
+        headers: { "Content-Type": "text/plain" },
       });
 
-      setResultHash(result.txid || txHex);
+      const txid = await resp.text();
+
+      setResultHash(txid || txHex);
     } catch (e) {
       setError(e.message || `${e}`);
     }
-  }, [provider, getProvider, psbtListInput, signAddress]);
+  }, [provider, getProvider, psbtListInput]);
 
   const onChangeAddressRecipient = useCallback((event) => {
     setRecipient(event.target.value);
