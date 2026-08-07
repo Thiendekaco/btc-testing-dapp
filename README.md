@@ -10,3 +10,5 @@ The app allows you to combine multiple PSBT hex strings into one transaction.
 3. Click **Combine** to merge all PSBTs, finalize them and broadcast the raw
    transaction through Blockstream's testnet API.
 4. The result or any error message will appear in the **Result** area.
+
+-- END --
